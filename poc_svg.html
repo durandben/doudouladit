@@ -1,0 +1,168 @@
+<html>
+<head>
+  <title>Test Drag'n'Drop Texture SVG</title>
+  <script src="https://unpkg.com/interactjs/dist/interact.min.js"></script>
+  <script>
+    
+    function drag(event) {
+      console.log('Drag : ', event);
+    }
+    
+    function drop(event) {
+      console.log('Drop : ', event);
+    }
+    
+    let position = { x: 0, y: 0 };
+    
+    interact('.available-texture').draggable({
+      listeners: {
+        move (event) {
+          position.x += event.dx
+          position.y += event.dy
+    
+          event.target.style.transform =
+            `translate(${position.x}px, ${position.y}px)`;
+        }
+      }
+    });
+    interact('svg').dropzone({
+      ondrop: function (event) {
+        let x = event._interaction._latestPointer.pointer.clientX;
+        let y = event._interaction._latestPointer.pointer.clientY;
+        
+        let draggedTexture = event.relatedTarget.id;
+      
+        position = { x: 0, y: 0 };
+        event.relatedTarget.style.transform =
+          `translate(${position.x}px, ${position.y}px)`;
+        
+        let patron = event.currentTarget;
+        let defs;
+        if (patron.getElementsByTagName("defs").length == 0) {
+          defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+          patron.appendChild(defs);
+        }
+        defs = patron.getElementsByTagName("defs")[0];
+        let patterns = defs.getElementsByTagName("pattern");
+        let patternExists = false;
+        for (let pattern of patterns) {
+          if (pattern.id == draggedTexture) {
+            patternExists = true;
+            break;
+          }
+        }
+        
+        if (!patternExists) {
+          console.log('Pattern ' + draggedTexture + ' n\'existe pas, il va être ajouté au patron ' + patron.id);
+          const newPattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+          newPattern.setAttribute('id', draggedTexture);
+          newPattern.setAttribute('x', '0');
+          newPattern.setAttribute('y', '0');
+          newPattern.setAttribute('width', '60');
+          newPattern.setAttribute('height', '60');
+          newPattern.setAttribute('patternUnits', 'userSpaceOnUse');
+          defs.appendChild(newPattern);
+          const newImage = document.createElementNS('http://www.w3.org/2000/svg', 'image');
+          newImage.setAttribute('x', '0');
+          newImage.setAttribute('y', '0');
+          newImage.setAttribute('width', '60');
+          newImage.setAttribute('height', '60');
+          newImage.setAttribute('xlink:href', event.relatedTarget.src);
+          newPattern.appendChild(newImage);
+          // Force SVG Reload
+          patron.innerHTML += "";
+        }
+        
+        let svgElement = document.elementFromPoint(x,y);
+        
+        // si l'élément est dans un groupe, alors il faut appliquer la même texture à tous les éléments du groupe
+        const highestGroup = findHighestGroup(svgElement);
+        if (highestGroup) {
+          applyTexture(highestGroup, draggedTexture);
+        }
+        
+        
+      }
+    });
+    
+    function findHighestGroup(element, foundElement = element) {
+      if (element.tagName === 'svg') {
+        return foundElement;
+      }
+      let group = foundElement;
+      if (element.tagName === 'g') {
+        group = element;
+      }
+      return findHighestGroup(element.parentElement, group);
+    }
+    
+    function applyTexture(element, texture) {
+        element.setAttribute('fill', 'url(#' + texture + ')');
+        for (e of element.children) {
+          applyTexture(e, texture);
+        }
+      
+    }
+    
+    
+  </script>
+  <style>
+    svg {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<body>
+  
+<svg xmlns="http://www.w3.org/2000/svg" id="front" width="500" height="500" viewBox="150 120 425.1969 425.1968">
+  <g>
+  <ellipse cx="329.9461" cy="-529.6887" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(90)"/>
+  <ellipse cx="330.1032" cy="-196.9797" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(90)"/>
+  <ellipse cx="480.5335" cy="271.7588" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(30)"/>
+  <ellipse cx="-149.9237" cy="-635.0287" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(150)"/>
+  <ellipse cx="481.7632" cy="-60.5617" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(30)"/>
+  <ellipse cx="-148.806" cy="-302.2604" fill="#d3aa78" rx="10.3212" ry="28.9741" transform="rotate(150)"/>
+  </g>
+  <path fill="#af9473" d="M290.3571 457.2454A145.7143 145.7143 0 0 1 217.5 331.0531h145.7143z"/>
+  <path fill="#a17540" d="M436.1642 457.2454a145.7143 145.7143 0 0 1-145.7143 0l72.8572-126.1923z"/>
+  <path fill="#766857" d="M508.9286 331.0531a145.7143 145.7143 0 0 1-72.8572 126.1923l-72.8571-126.1923z"/>
+  <path fill="#6e4a1f" d="M436.0714 204.8609a145.7143 145.7143 0 0 1 72.8572 126.1922H363.2143z"/>
+  <path fill="#8d8882" d="M290.45 204.8609a145.7143 145.7143 0 0 1 145.7142 0L363.3071 331.053z"/>
+  <path fill="#a6855f" d="M217.5 331.0531a145.7143 145.7143 0 0 1 72.8571-126.1922l72.8572 126.1922z"/>
+  <circle cx="363.2143" cy="331.0531" r="43.3929" fill="#d3aa78"/>
+</svg>
+
+<svg xmlns="http://www.w3.org/2000/svg" id="back" width="500" height="500" viewBox="20 -5 425.1969 425.1968">
+  <g fill="#f0ddc5">
+    <ellipse cx="205.9979" cy="-395.4365" rx="10.3212" ry="28.9741" transform="rotate(90)"/>
+    <ellipse cx="206.1549" cy="-62.7276" rx="10.3212" ry="28.9741" transform="rotate(90)"/>
+    <ellipse cx="302.2936" cy="231.5425" rx="10.3212" ry="28.9741" transform="rotate(30)"/>
+    <ellipse cx="-95.632" cy="-460.5603" rx="10.3212" ry="28.9741" transform="rotate(150)"/>
+    <ellipse cx="303.5233" cy="-100.7779" rx="10.3212" ry="28.9741" transform="rotate(30)"/>
+    <ellipse cx="-94.5144" cy="-127.792" rx="10.3212" ry="28.9741" transform="rotate(150)"/>
+    <circle cx="207.1049" cy="-228.9621" r="145.7143" transform="rotate(90)"/>
+  </g>
+</svg>
+  
+  <hr />
+  Tissus disponibles
+  <table>
+    <tr>
+      <td>
+        <img
+          id="texture-bordeaux"
+          class="available-texture"
+          src="https://media.fabfab.net/images/products/popup/polaire-douillet-points-en-relief-rouge-bordeaux--81_03347_018.jpg" width="100" height="100" /></td>
+      <td><img
+          id="texture-bleu-clair"
+          class="available-texture"
+          src="https://media.fabfab.net/images/products/popup/polaire-douillet-points-en-relief-bleu-clair--81_03347_006.jpg" width="100" height="100" /></td>
+      <td><img
+          id="texture-jaune-curry"
+          class="available-texture"
+          src="https://media.fabfab.net/images/products/popup/polaire-douillet-points-en-relief-jaune-curry--81_03347_034.jpg" width="100" height="100" /></td>
+    </tr>
+  </table>
+  
+</body>
+</html>
