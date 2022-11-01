@@ -74,6 +74,9 @@
         }
         
         let svgElement = document.elementFromPoint(x,y);
+        if (svgElement.tagName == 'svg') {
+          return;
+        }
         
         // si l'élément est dans un groupe, alors il faut appliquer la même texture à tous les éléments du groupe
         const highestGroup = findHighestGroup(svgElement);
@@ -109,6 +112,9 @@
   <style>
     svg {
       border: 1px solid black;
+    }
+    .available-texture {
+      touch-action: none
     }
   </style>
 </head>
